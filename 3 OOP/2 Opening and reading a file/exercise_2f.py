@@ -48,22 +48,15 @@ cook_book = {
 def get_shop_list_by_dishes(dishes, person_count):
     shop_list = {}                                       # итоговый словарь
     
-    for dish in dishes: # т.к. в первом задании написано, что колличесво ингридиентов в списке указанно не на одного человека, то будем это учитывать
-        if dish == 'Омлет' or dish == 'Запеченный картофель':
-            x = 3
-        elif dish == 'Утка по-пекински':
-            x = 4
-        elif dish == 'Фахитос':
-            x = 5
-        
+    for dish in dishes: 
         for ingredient in cook_book[dish]:             # проходим по ингридиентам 
-            ing = {}                             # временный словарь для хранения одного ингридиента
-            quantity = (int(ingredient['quantity'])) / x * person_count                     # расчет колличества ингридиента с учетом колличества персон
-            ing.setdefault(ingredient['ingredient_name'], {'measure': (ingredient['measure']), 'quantity': round(quantity, 1)})      # создаем ингридиент 
-            if ingredient['ingredient_name'] not in shop_list:                  # проверяем, есть ли такой ингридиент в списке
-                shop_list.update(ing)
+            ing_name = ingredient['ingredient_name'] 
+            quantity = int(ingredient['quantity']) * person_count   # расчет колличества ингридиента с учетом колличества персон
+
+            if ing_name not in shop_list:       # проверяем, есть ли такой ингридиент в списке
+                shop_list[ing_name] = {'measure': (ingredient['measure']), 'quantity': quantity}    # создаем ингридиент 
             else:
-                shop_list.get(ingredient['ingredient_name'])['quantity'] += round((int(ingredient['quantity'])) / x * person_count) # запрашиваем ключ в сушествующем ингридиенте и обновляем его c учетом колличества перон                               
+                shop_list[ing_name]['quantity'] += quantity # запрашиваем ключ в сушествующем ингридиенте и обновляем его c учетом колличества перон                               
     return shop_list
                  
 print(get_shop_list_by_dishes(['Запеченный картофель', 'Омлет'], 2))

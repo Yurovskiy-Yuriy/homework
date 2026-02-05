@@ -19,16 +19,28 @@ cook_book = {
     ]
   }
 '''
+import re
+
 cook_book = {}
-with open(r'd:\recipes.txt', encoding='utf-8') as f:
-          for line in f:
-              if '|' not in line and len(line) > 2:                       # если в строке есть символ '|' и строка больше двух символов тогда:
-                  cook_book.setdefault(line.strip('\n'), [])     # создаем новый ключ с пустым значением
-                  key = line.strip('\n')                         # запоминаем название ключа в переменную
-              elif '|' in line:                                          # иначе если в строке есть символ '|'
-                  line_remix = line.strip('\n').split('|')       # разбиваем строку на части используя '|' 
-                  cook_book[key].append({'ingredient_name': line_remix[0].strip(' '), 'quantity': int(line_remix[1].strip(' ')), 'measure': line_remix[2].strip(' ')}) # добавляем в существующий ключ соответсвующие значения
-print(cook_book)
+with open(r'd:\test\recipes.txt', encoding='utf-8') as f:
+    for line in f:
+        clean_line = line.strip()
+        # Регулярное выражение для извлечения название блюда
+        dish_re = r'^[А-Яа-яЁё\s\-]+$'
+        dish = re.match(dish_re, clean_line)
+
+        # Регулярное выражение для извлечения ингридиента
+        ingredient_re = r'^(.+)\s+\|\s*(\d+)\s\|\s*(.+)$'
+        ingredient = re.match(ingredient_re, clean_line)
+
+        if dish:
+            dish_result = dish.group()
+            cook_book.setdefault(dish_result, []) # создаем название блюда
+
+        if ingredient:
+            ingredient_result, quantity, unit = ingredient.groups() # добавляем в название блюда ингридиенты 
+            cook_book[dish_result].append({'ingredient_name': ingredient_result, 'quantity': quantity, 'measure': unit})
+    print(cook_book)
 
 '''
 Результат:

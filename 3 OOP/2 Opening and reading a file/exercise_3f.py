@@ -23,43 +23,32 @@
 Строка номер 2 файла номер 1
 '''
 
-
-number_lines_f1 = 0
-number_lines_f2 = 0
-number_lines_f3 = 0
-file1 = []
-file2 = []
-file3 = []
-
 result = {}
 
-with open(r'd:\file\1.txt', encoding='utf-8') as f:
-    for line in f:
-        number_lines_f1 += 1
-        file1.append(line.strip())
+file_txt = ['1.txt', '2.txt', '3.txt']
 
-with open(r'd:\file\2.txt', encoding='utf-8') as f:
-    for line in f:
-        number_lines_f2 += 1
-        file2.append(line.strip())
+def reading_a_file(file):
+    with open(f'd:/file/{file}', encoding='utf-8') as f:
+        number_lines = 0
+        file_result = []
+        for line in f:
+            number_lines += 1                 # считаем количество строк 
+            file_result.append(line.strip())
+        return number_lines, file_result      # возращяем колиичество строк и и текст построчно
 
-with open(r'd:\file\3.txt', encoding='utf-8') as f:
-    for line in f:
-        number_lines_f3 += 1
-        file3.append(line.strip())
-        
-result.setdefault('1.txt', (number_lines_f1, file1))            # словать с кортежем
-result.setdefault('2.txt', (number_lines_f2, file2))
-result.setdefault('3.txt', (number_lines_f3, file3))
+for file in file_txt:
+    lines, read_file = reading_a_file(file)
+    result.setdefault(file, (lines, read_file))  # получаем список из кортежей
+
 sorted_result = sorted(result.items(), key=lambda x: x[1] [0])  # сортируем
 
 with open(r'd:\file\result.txt', 'w') as file_out:
-        for filename, data in sorted_result:
+        for filename, data in sorted_result:   # работаем поочереди с каждым списком из кортежей 
             num_lines, content = data                           # распаковываем кортеж
-            file_out.write(filename + '\n')
-            file_out.write(str(num_lines) + '\n')
+            file_out.write(filename + '\n')      # добавляем в файл первую строчку - название файла
+            file_out.write(str(num_lines) + '\n')   # добавляем в файл второй строчкой - колличество строк
             for line in content:
-                file_out.write(line + '\n')
+                file_out.write(line + '\n')      # далее добавляем в файл построчно весь текст 
 print('Файл сохранен')
 
 
