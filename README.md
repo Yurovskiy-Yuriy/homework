@@ -1,9 +1,3 @@
-# 🐍 Домашние задания: Python-разработчик (расширенный курс)
-5 ноября 2025 — 16 ноября 2026
+# Домашнее задание «Работа с PostgreSQL. Создание БД»
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
-![Netology](https://img.shields.io/badge/Нетология-курс_Продвинутый_Python-red)
-![Status](https://img.shields.io/badge/Статус-В_процессе-orange)
-
-Репозиторий для сдачи домашних заданий на курсе **«Python-разработчик: расширенный курс»** в [Нетологии](https://netology.ru).
-
+Репозиторий домашних заданий на курсе **«Python-разработчик: расширенный курс»** в [Нетологии](https://netology.ru).
