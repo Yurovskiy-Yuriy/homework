@@ -96,4 +96,18 @@ INSERT INTO track_collection (track_id, collection_id) VALUES
 (7,8);  -- Звезда по имени Солнце - Последний герой 
 
 
+--ДОРАБОТКА
+INSERT INTO track (name, duration_seconds, album_id) VALUES 
+('my own', 180, 1),
+('own my', 180, 1),
+('my', 180, 1),
+('oh my god', 180, 1),
+('myself', 180, 1),
+('by myself', 180, 1),
+('bemy self', 180, 1),
+('myself by', 180, 1),
+('by myself by', 180, 1),
+('beemy', 180, 1),
+('premyne', 180, 1);
+
 

@@ -25,7 +25,10 @@ WHERE year >= 2000 AND year <= 2020;   -- год изменен на 2000
 SELECT name FROM artist
 WHERE name NOT LIKE '% %';
 
-
+--ДОРАБОТКА
 -- 5.	Название треков, которые содержат слово «мой» или «my».
 SELECT name FROM track
-WHERE name LIKE '%ночь%'; -- название изменно на "ночь"
+WHERE name ILIKE 'my'          
+    OR name ILIKE 'my %'
+    OR name ILIKE '% my'
+    OR name ILIKE '% my %';
