@@ -1,9 +1,7 @@
-'''Применить написанный логгер к приложению из любого предыдущего д/з.
-    Домашнее задание к лекции «Web-scrapping»'''
-
 import bs4
 import requests
 
+import os
 import time
 from datetime import datetime
 from functools import wraps
@@ -22,16 +20,27 @@ def logger(old_function):
   
         total_time = round((end - start), 2)
     
-        log = (f'{start_readable} вызвана функция {old_function.__name__}, общее время работы функции: {total_time}')
-
-        with open(r'main.log', 'a', encoding='utf-8') as file_out:  
-            file_out.write(log + '\n')
-
+        with open(r'main.log', 'a', encoding='utf-8') as file_out:
+            file_out.write(f'\n{"#"*80}\n')
+            file_out.write(f'# Время вызова: {start_readable}\n')
+            file_out.write(f'# Функция: {old_function.__name__}\n')
+            file_out.write(f'# Аргументы: args={args}, kwargs={kwargs}\n')
+            file_out.write(f'# Время работы: {total_time} сек.\n')
+            file_out.write(f'# Результат работы:\n')
+            
+            if isinstance(result, list):
+                for item in result:
+                    file_out.write(item)
+                    file_out.write('\n' + '-'*40 + '\n')
+            else:
+                file_out.write(str(result))
+            
         return result
     return new_function
 
 @logger
 def scrapping():
+    result_news = []
     n = 0   # счетчик колличества найденных статей
     # список ключевых слов:
     KEYWORDS = ['дизайн', 'фото', 'web', 'python']
@@ -74,16 +83,13 @@ def scrapping():
         # Получаем время публикации
         time_tag = article.select_one('time')
         if time_tag:
-            time = time_tag['title']
+            pub_time  = time_tag['title']
         else:
-            time = 'Время не найдено'
+            pub_time  = 'Время не найдено'
 
         # Находим описание статьи
         preview_text_element = article.select_one('div.article-formatted-body')
         
-        # Ищем элемент с описанием
-        preview_text_element = article.select_one('div.article-formatted-body')
-
         # Проверяем, нашли ли мы preview_text_element
         if preview_text_element:
             preview_text = preview_text_element.text.strip()
@@ -107,17 +113,15 @@ def scrapping():
         search_string = f"{title} {preview_text} {article_text}".lower()
         
         # Ищем совпадения
+        
         for keyword in KEYWORDS:
             if keyword in search_string:
                 n += 1
-                print(time)
-                print(title)
-                print(link) 
-                print(article_text)
-                print()
+                result_news.append(pub_time + '\n' + title + '\n' + link + '\n' + article_text[:500])
                 break
-            
-    print(f'Всего найдено {n} статей')
+    result_news.append(f'Всего найдено {n} статей')
+    print(result_news)
+    return result_news
 
 if __name__ == '__main__':
     scrapping()
