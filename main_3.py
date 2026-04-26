@@ -13,15 +13,20 @@ def logger(old_function):
         # Человекочитаемый формат
         start_readable = datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         
-        result = old_function(*args, **kwargs)
-   
         log = (f'{start_readable} '
             f'имя функции: {old_function.__name__}, '
-            f'аргументы: {args} и {kwargs}, '
-            f'возвращаемое значение: {result}\n')
+            f'аргументы: {args} и {kwargs}, ')
 
         with open(r'main.log', 'a', encoding='utf-8') as file_out:  
             file_out.write(log)
+
+        # результат берём после вызова функции
+        result = old_function(*args, **kwargs)
+   
+        log_2 = (f'возвращаемое значение: {result}\n') #в лог пишем в одну строку возвращаемое значение 
+
+        with open(r'main.log', 'a', encoding='utf-8') as file_out:  
+            file_out.write(log_2)
 
         return result
     return new_function
