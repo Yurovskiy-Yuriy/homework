@@ -14,15 +14,14 @@ def logger(old_function):
         start_readable = datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         
         result = old_function(*args, **kwargs)
-
-        end = time.time()
-        total_time = round((end - start), 2)
    
-        log = (f'{start_readable} вызвана функция {old_function.__name__} с аргументами {args} и {kwargs}, время работы функции {total_time} сек.')
+        log = (f'{start_readable} '
+            f'имя функции: {old_function.__name__}, '
+            f'аргументы: {args} и {kwargs}, '
+            f'возвращаемое значение: {result}\n')
 
         with open(r'main.log', 'a', encoding='utf-8') as file_out:  
-            file_out.write(log + '\n')
-            file_out.write(f'Результат работы функции: {result}' + '\n')
+            file_out.write(log)
 
         return result
     return new_function
