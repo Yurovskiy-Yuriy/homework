@@ -1,7 +1,7 @@
 import bs4
 import requests
 
-import time
+
 from datetime import datetime
 from functools import wraps
 
@@ -9,24 +9,25 @@ def logger(old_function):
     @wraps(old_function)
     def new_function(*args, **kwargs):
 
-        start = time.time()
-        # Человекочитаемый формат
-        start_readable = datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        # фиксируем время до вызва функции
+        call_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         
-        log = (f'{start_readable} '
-            f'имя функции: {old_function.__name__}, '
-            f'аргументы: {args} и {kwargs}, ')
+        # собираем данные  до вызва функции
+        func_name = old_function.__name__
+        func_args = f"args: {args}, kwargs: {kwargs}"
+        
+        # вызваем функцию
+        result = old_function(*args, **kwargs)
 
+        # формируем лог
+        log = (f'{call_time} '
+            f'имя функции: {func_name}, '
+            f'аргументы: {func_args}, '
+            f'возвращаемое значение: {result}\n')
+
+        # записываем в файл
         with open(r'main.log', 'a', encoding='utf-8') as file_out:  
             file_out.write(log)
-
-        # результат берём после вызова функции
-        result = old_function(*args, **kwargs)
-   
-        log_2 = (f'возвращаемое значение: {result}\n') #в лог пишем в одну строку возвращаемое значение 
-
-        with open(r'main.log', 'a', encoding='utf-8') as file_out:  
-            file_out.write(log_2)
 
         return result
     return new_function
