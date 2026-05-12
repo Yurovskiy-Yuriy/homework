@@ -1,80 +1,72 @@
-'''Доработать параметризованный декоратор logger в коде ниже. 
-Должен получиться декоратор, который записывает в файл дату и 
-время вызова функции, имя функции, аргументы, с которыми вызвалась, 
-и возвращаемое значение. Путь к файлу должен передаваться 
-в аргументах декоратора.
- Функция test_2 в коде ниже также должна отработать без ошибок.'''
-
-import os
-import time
-from datetime import datetime
-from functools import wraps
-
-def logger(path):
-    
-    def __logger(old_function):
-        @wraps(old_function)
-        def new_function(*args, **kwargs):
-            
-
-            start = time.time()
-            # Человекочитаемый формат
-            start_readable = datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            
-            log = (f'{start_readable} вызвана функция {old_function.__name__} с аргументами {args} и {kwargs}')
-            result = old_function(*args, **kwargs)
-            # end = time.time()
-
-
-            with open(path, 'a', encoding='utf-8') as file_out:  
-                file_out.write(log + '\n')
-                file_out.write(f'Результат работы функции: {result}' + '\n')
-            return result 
+class Stack:
+    def __init__(self):
+        self.stack_list = []
         
-        return new_function
+    # проверка стека на пустоту
+    def is_empty(self):
+        return len(self.stack_list) == 0
+    
+    # добавление нового элемента на вершину стека
+    def push(self, element):
+        self.stack_list.append(element)
+        
+    # удаление верхнего элемента стека
+    def pop(self):
+        if self.is_empty():  # Проверяем, не пуст ли стек, чтобы избежать ошибки
+            return None
+        return self.stack_list.pop()
 
-    return __logger
-
-
-def test_2():
-    paths = ('log_1.log', 'log_2.log', 'log_3.log')
-
-    for path in paths:
-        if os.path.exists(path):
-            os.remove(path)
-
-        @logger(path)
-        def hello_world():
-            return 'Hello World'
-
-        @logger(path)
-        def summator(a, b=0):
-            return a + b
-
-        @logger(path)
-        def div(a, b):
-            return a / b
-
-        assert 'Hello World' == hello_world(), "Функция возвращает 'Hello World'"
-        result = summator(2, 2)
-        assert isinstance(result, int), 'Должно вернуться целое число'
-        assert result == 4, '2 + 2 = 4'
-        result = div(6, 2)
-        assert result == 3, '6 / 2 = 3'
-        summator(4.3, b=2.2)
-
-    for path in paths:
-
-        assert os.path.exists(path), f'файл {path} должен существовать'
-
-        with open(path) as log_file:
-            log_file_content = log_file.read()
-
-        assert 'summator' in log_file_content, 'должно записаться имя функции'
-
-        for item in (4.3, 2.2, 6.5):
-            assert str(item) in log_file_content, f'{item} должен быть записан в файл'
-
-
+    # возвращение верхнего элемента стека, но не удаляет его
+    def peek(self):
+        if self.is_empty(): # # Проверяем, не пуст ли стек, чтобы избежать ошибки
+            return None
+        return self.stack_list[-1]
+    
+    # возвращение количества элементов в стеке
+    def size(self):
+        return len(self.stack_list)
+    
+    
+    
 if __name__ == '__main__':
-    test_2()
+
+    element_dict = {'(': ')', '[': ']', '{': '}'}
+    
+    def balanced_list(input_string):
+        
+        stack = Stack()
+        is_balanced = True
+    
+        for x in input_string:
+            
+            if x in element_dict: # проверяяем существует ли такой ключ в словаре
+                stack.push(x)
+            #добавляем до тех пор пока не сработает следующяя проверка
+            
+            elif x in element_dict.values(): # проверяем, что текущий символ- закрывающяя скобка
+                if stack.is_empty(): # пустой ли стек
+                    is_balanced = False # стек пустой, а у нас появилась закрывающяя скобка
+                    break 
+                
+                last_open = stack.pop() # удаляем последний эллемент и запоминаем его
+                if element_dict[last_open] != x: # если значение его ключа в словаре не равно самому ему то: 
+                    is_balanced = False
+                    break
+            
+
+        if not stack.is_empty(): # проверка на остаток скобок в стеке
+            is_balanced = False
+        
+        if is_balanced:
+            return 'Сбалансированно'
+        else:
+            return 'Несбалансированно'
+    
+    
+    print(balanced_list('{{[()]}}'))
+    print(balanced_list('[([])((([[[]]])))]{()}'))
+    print(balanced_list('{{[()]}}'))
+    
+    print(balanced_list('}{}'))
+    print(balanced_list('{{[(])]}}'))
+    print(balanced_list('[[{())}]'))
