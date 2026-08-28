@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ phone.name }}</title>
+</head>
+<body>
+    <h1>{{ phone.name }}</h1>
+    <img src="{{ phone.image }}" alt="{{ phone.name }}" style="max-width: 400px;">
+    <p><strong>Цена:</strong> {{ phone.price }} ₽</p>
+    <p><strong>Дата выхода:</strong> {{ phone.release_date }}</p>
+    <p><strong>LTE:</strong> {% if phone.lte_exists %}Да{% else %}Нет{% endif %}</p>
+    <p><strong>Описание:</strong></p>
+    <p>{{ phone.description }}</p>
+    <a href="{% url 'catalog' %}">Назад к каталогу</a>
+</body>
+</html>

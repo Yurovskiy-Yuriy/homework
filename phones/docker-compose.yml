@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17
+    container_name: phones_db
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./phones_backup_utf8.sql:/docker-entrypoint-initdb.d/phones_backup.sql 
+    restart: always
+    networks:
+      - phones_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: phones_web
+    ports:
+      - "8000:8000"
+    # Передаем переменные из .env файла
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db  # Переопределяем для работы внутри контейнера
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    restart: always
+    networks:
+      - phones_network
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+
+networks:
+  phones_network:
+    driver: bridge

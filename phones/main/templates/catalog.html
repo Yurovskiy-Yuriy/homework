@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Каталог телефонов</title>
+</head>
+<body>
+    <h1>Каталог телефонов</h1>
+    <div style="display: flex; flex-wrap: wrap;">
+        {% for phone in phones %}
+        <div style="border: 1px solid #ccc; margin: 10px; padding: 10px; width: 300px;">
+            <div style="text-align: center;">
+                <img src="{{ phone.image }}" alt="{{ phone.name }}" style="max-width: 100%; height: auto; max-height: 250px;">
+            </div>
+            <h2>{{ phone.name }}</h2>
+            <p>Цена: {{ phone.price }} ₽</p>
+            <p>Дата выхода: {{ phone.release_date }}</p>
+            <p>LTE: {% if phone.lte_exists %}✅ Да{% else %}❌ Нет{% endif %}</p>
+            <a href="{% url 'phone_detail' phone.id %}">Подробнее</a>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
