@@ -17,5 +17,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копируем весь проект
 COPY . .
 
+# Собираем все статические файлы из всех приложений в одну папку — STATIC_ROOT
+# командой python manage.py collectstatic --noinput
+
 # Запускаем с миграциями и сервером
-CMD sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+CMD sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 phones.wsgi "
+# && gunicorn phones.wsgi:application --bind 0.0.0.0:8000"
+# python manage.py runserver 0.0.0.0:8000
