@@ -1,0 +1,34 @@
+@baseUrl = http://127.0.0.1:8080
+
+###
+# Создание объявления
+POST {{baseUrl}}/ads
+Content-Type: application/json
+
+{
+  "title": "Продам велосипед",
+  "description": "В хорошем состоянии",
+  "owner": "Иван"
+}
+
+###
+# Получение списка всех объявлений
+GET {{baseUrl}}/ads
+
+###
+# Получение объявления с id=1
+GET {{baseUrl}}/ads/2
+
+###
+# Редактирование объявления с id=1
+PUT {{baseUrl}}/ads/2
+Content-Type: application/json
+
+{
+  "title": "Продам велосипед (обновлено)",
+  "description": "Состояние отличное, торг уместен"
+  }
+
+###
+# Удаление объявления с id=1
+DELETE {{baseUrl}}/ads/1

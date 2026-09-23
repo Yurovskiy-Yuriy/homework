@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Сервис базы данных PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: ads_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432" # что бы был доступ к БД с хост-машины
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Сохраняет данные БД между перезапусками
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Сервис приложения
+  web:
+    build: .
+    container_name: ads_web
+    restart: always
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_HOST=db 
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy # Ждет, пока БД полностью не запустится
+    # Сначала делаем миграцию, потом запускаем приложение
+    command: sh -c "python migrate.py && python app.py"
+
+volumes:
+  pgdata: # Именованный том для постоянного хранения данных БД

@@ -1,33 +1,24 @@
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from datetime import datetime, timezone
+from typing import Optional
+from sqlalchemy import Column, Integer, String, DateTime, func
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String
 
 Base = declarative_base()
 
-class Character(Base):
-    __tablename__ = 'characters'
-    
+class Ad(Base):
+    __tablename__ = "ads"
+
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    birth_year = Column(String)
-    eye_color = Column(String)
-    gender = Column(String)
-    hair_color = Column(String)
-    homeworld = Column(String)
-    mass = Column(String)
-    skin_color = Column(String)
+    title = Column(String(255), nullable=False)
+    description = Column(String, nullable=False)  
+    owner = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
-async def run_migration():
-    DATABASE_URL = "postgresql+asyncpg://postgres:308@localhost:5432/swapi_db"
-    
-    engine = create_async_engine(DATABASE_URL, echo=False)
-    
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        
-    print("Миграция завершена: таблица 'characters' создана в PostgreSQL.")
-    await engine.dispose()
-
-if __name__ == "__main__":
-    asyncio.run(run_migration())
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "owner": self.owner,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
