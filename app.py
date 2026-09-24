@@ -2,7 +2,6 @@ import os
 from aiohttp import web
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import insert, update, delete
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
@@ -82,7 +81,24 @@ async def update_ad(request):
             {"error": "Тело запроса должно быть валидным JSON"},
             status=400
         )
+    # Проверяем, что передано хотя бы одно поле для обновления
+    updatable_fields = ["title", "description", "owner"]
+    fields_to_update = {field: data[field] for field in updatable_fields if field in data}
 
+    if not fields_to_update:
+        return web.json_response(
+            {"error": "Не передано ни одного поля для обновления (title, description, owner)"},
+            status=400
+        )
+
+    # Проверяем, что переданные значения не пустые
+    for field, value in fields_to_update.items():
+        if not value or not str(value).strip():
+            return web.json_response(
+                {"error": f"Поле '{field}' не может быть пустым"},
+                status=400
+            )
+        
     async with AsyncSession(engine) as session:
         ad = await get_ad_or_404(session, ad_id)
 
