@@ -9,7 +9,9 @@ class Advertisement(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
-    description: Mapped[str | None]
-    price: Mapped[int] = mapped_column()
+    # ИЗМЕНЕНО: Поле description сделано обязательным (убрано | None)
+    description: Mapped[str]
+    # ИЗМЕНЕНО: Тип цены изменен с int на float
+    price: Mapped[float] = mapped_column()
     author: Mapped[str]
     created_at: Mapped[DateTime] = mapped_column(server_default=func.now())

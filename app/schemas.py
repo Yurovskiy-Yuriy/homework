@@ -4,7 +4,8 @@ from datetime import datetime
 
 class CreateAdvertRequest(BaseModel):
     title: str
-    description: str | None
+     # ИЗМЕНЕНО: Поле description сделано обязательным (убрано | None)
+    description: str
     price: float
     author: str
 
@@ -17,7 +18,9 @@ class UpdateAdvertRequest(BaseModel):
 class AdvertResponse(BaseModel):
     id: int
     title: str
-    description: str | None
+    # ИЗМЕНЕНО: Поле description сделано обязательным (убрано | None)
+    description: str
+    # ИЗМЕНЕНО: Тип цены float
     price: float
     author: str
     created_at: datetime

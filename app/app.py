@@ -38,8 +38,8 @@ async def on_startup():
 async def on_shutdown():
     await engine.dispose()
 
-
-@app.post('/v1/advertisement', response_model=CreateAdvertResponse)
+# ИЗМЕНЕНО: Убран префикс /v1 из маршрута
+@app.post('/advertisement', response_model=CreateAdvertResponse)
 async def api_create_advert(
     data: CreateAdvertRequest,
     db: AsyncSession = Depends(get_db)
@@ -53,8 +53,8 @@ async def api_create_advert(
             raise HTTPException(status_code=409, detail="Объявление с такими данными уже существует.")
         raise
 
-
-@app.get('/v1/advertisement/{advert_id}', response_model=AdvertResponse)
+# ИЗМЕНЕНО: Убран префикс /v1 из маршрута
+@app.get('/advertisement/{advert_id}', response_model=AdvertResponse)
 async def api_get_advert(
     advert_id: int,
     db: AsyncSession = Depends(get_db)
@@ -62,8 +62,8 @@ async def api_get_advert(
     """Получить объявление по ID"""
     return await get_advert_by_id(db, advert_id)
 
-
-@app.patch('/v1/advertisement/{advert_id}', response_model=AdvertResponse)
+# ИЗМЕНЕНО: Убран префикс /v1 из маршрута
+@app.patch('/advertisement/{advert_id}', response_model=AdvertResponse)
 async def api_patch_advert(
     advert_id: int,
     data: UpdateAdvertRequest,
@@ -72,8 +72,8 @@ async def api_patch_advert(
     """Частичное обновление объявления"""
     return await patch_advert(db, advert_id, data)
 
-
-@app.delete('/v1/advertisement/{advert_id}')
+# ИЗМЕНЕНО: Убран префикс /v1 из маршрута
+@app.delete('/advertisement/{advert_id}')
 async def api_delete_advert(
     advert_id: int,
     db: AsyncSession = Depends(get_db)
@@ -82,18 +82,22 @@ async def api_delete_advert(
     await delete_advert(db, advert_id)
     return {"status": "ok"}
 
-
-@app.get('/v1/advertisement', response_model=list[AdvertResponse])
+# ИЗМЕНЕНО: Убран префикс /v1,
+# добавлены description и created_at, 
+# убран префикс q_ у параметров
+@app.get('/advertisement', response_model=list[AdvertResponse])
 async def api_search_adverts(
-    q_title: str | None = None,
-    q_author: str | None = None,
-    q_price_min: float | None = None,
-    q_price_max: float | None = None,
+    title: str | None = None,
+    author: str | None = None,
+    price_min: float | None = None,
+    price_max: float | None = None,
+    description: str | None = None,
+    created_at: str | None = None,
     db: AsyncSession = Depends(get_db)
 ):
     """
     Поиск объявлений по параметрам:
-    ?q_title=машина&q_author=Иван&q_price_min=10000&q_price_max=50000
+    ?title=машина&author=Иван&price_min=10000&price_max=50000&description=хорошее&created_at=2023
     """
-    adverts = await search_adverts(db, q_title, q_author, q_price_min, q_price_max)
+    adverts = await search_adverts(db, title, author, price_min, price_max, description, created_at)
     return adverts

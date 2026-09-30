@@ -1,9 +1,10 @@
 #app/services.py
-from typing import Optional
+from typing import Optional, List
 from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, update
+# ИЗМЕНЕНО: Добавлен импорт cast и String для поиска по дате
+from sqlalchemy import select, delete, update, cast, String
 
 from .models import Advertisement as AdModel
 from .schemas import AdvertResponse, CreateAdvertRequest, UpdateAdvertRequest
@@ -36,26 +37,24 @@ async def get_advert_by_id(session: AsyncSession, ad_id: int) -> AdvertResponse:
 
 
 # Обновление
+# ИЗМЕНЕНО: Исправлен подход на "get -> setattr -> commit"
 async def patch_advert(
     session: AsyncSession,
     ad_id: int,
     data: UpdateAdvertRequest
 ) -> AdvertResponse:
-    stmt = (
-        update(AdModel).
-        where(AdModel.id == ad_id).
-        values(data.model_dump(exclude_unset=True)).
-        returning(AdModel)  # возвращаем саму ORM-модель, а не набор колонок
-    )
-
-    result = await session.execute(stmt)
-    updated_advert = result.scalar_one_or_none()  # получаем объект модели напрямую, а не кортеж Row
+    advert = await session.get(AdModel, ad_id)
     
-    if not updated_advert:
+    if not advert:
         raise HTTPException(status_code=404, detail=f'Объявление {ad_id} не найдено.')
-
+    
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(advert, field, value)
+        
     await session.commit()
-    return AdvertResponse.model_validate(updated_advert)  
+    await session.refresh(advert)
+    return AdvertResponse.model_validate(advert)   
 
 
 # Удаление
@@ -73,13 +72,15 @@ async def delete_advert(session: AsyncSession, ad_id: int) -> None:
 
 
 # Поиск
+# ИЗМЕНЕНО (пункт 2, 3): Добавлены query_description и query_created_at, переименованы параметры (убран префикс q_)
 async def search_adverts(
     session: AsyncSession,
     query_title: Optional[str] = None,
     query_author: Optional[str] = None,
     query_price_min: Optional[float] = None,
-    query_price_max: Optional[float] = None
-) -> list[AdvertResponse]:
+    query_price_max: Optional[float] = None,
+    query_description: Optional[str] = None,
+    query_created_at: Optional[str] = None) -> List[AdvertResponse]:
     stmt = select(AdModel)
 
     # Фильтры
@@ -94,6 +95,11 @@ async def search_adverts(
 
     if query_price_max is not None:
         stmt = stmt.where(AdModel.price <= query_price_max)
-
-    results = await session.execute(stmt)
-    return [AdvertResponse.model_validate(row) for row in results.scalars()]  
+        
+    # ИЗМЕНЕНО (пункт 2): Добавлен поиск по description
+    if query_description is not None:
+        stmt = stmt.where(AdModel.description.ilike(f'%{query_description}%'))
+        
+    # ИЗМЕНЕНО (пункт 2): Добавлен поиск по created_at (через приведение к строке для частичного совпадения)
+    if query_created_at is not None:
+        stmt = stmt.where(cast(AdModel.created_at, String).ilike(f'%{query_created_at}%'))

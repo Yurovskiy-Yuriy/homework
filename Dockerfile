@@ -1,3 +1,4 @@
+# Dockerfile
 FROM python:3.11-slim-bullseye
 
 # Отключаем запись .pyc файлов и буферизацию вывода (лучше для Docker)
