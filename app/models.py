@@ -31,7 +31,7 @@ class Token(Base):
         unique=True, 
         nullable=False
     )
-    # ДОРАБОТКА: datetime (Python) для Mapped, DateTime (SQLAlchemy) для mapped_column
+    # datetime (Python) для Mapped, DateTime (SQLAlchemy) для mapped_column
     creation_time: Mapped[datetime] = mapped_column(
         DateTime, 
         server_default=func.now(), 
@@ -49,11 +49,11 @@ class Advertisement(Base):
     price: Mapped[float] = mapped_column()
     author: Mapped[str] = mapped_column(String(100))
     
-    # ДОРАБОТКА: Поле для связи с пользователем (для проверки прав "свой/чужой")
+    # Поле для связи с пользователем (для проверки прав "свой/чужой")
     author_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=True)
     author_obj: Mapped["User"] = relationship("User", back_populates="adverts", lazy="joined")
     
-    # ДОРАБОТКА: datetime (Python) для Mapped, DateTime (SQLAlchemy) для mapped_column
+    # datetime (Python) для Mapped, DateTime (SQLAlchemy) для mapped_column
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     

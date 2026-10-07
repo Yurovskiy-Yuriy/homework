@@ -14,7 +14,7 @@ from .schemas import (
 )
 from .config import config
 
-# ДОРАБОТКА: Утилиты для работы с паролями
+# Утилиты для работы с паролями
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode(), salt).decode()
@@ -22,7 +22,7 @@ def hash_password(password: str) -> str:
 def check_password(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed_password.encode())
 
-# ДОРАБОТКА: Аутентификация (Логин)
+# Аутентификация (Логин)
 async def login_user(session: AsyncSession, username: str, password: str) -> Token:
     stmt = select(User).where(User.username == username)
     user = await session.scalar(stmt)
@@ -37,7 +37,7 @@ async def login_user(session: AsyncSession, username: str, password: str) -> Tok
     await session.refresh(new_token)
     return new_token
 
-# ДОРАБОТКА: CRUD для пользователей
+# CRUD для пользователей
 async def create_user_service(session: AsyncSession, data: CreateUserRequest) -> UserResponse:
     # Проверяем, существует ли пользователь
     stmt = select(User).where(User.username == data.username)
@@ -67,7 +67,7 @@ async def get_user_service(session: AsyncSession, user_id: int) -> UserResponse:
     return UserResponse.model_validate(user)
 
 async def update_user_service(session: AsyncSession, user_id: int, data: UpdateUserRequest, current_user: User) -> UserResponse:
-    # ДОРАБОТКА: Проверка прав (только админ или сам пользователь)
+    # Проверка прав (только админ или сам пользователь)
     if current_user.role.name != 'admin' and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Недостаточно прав для изменения чужих данных")
 
@@ -92,7 +92,7 @@ async def update_user_service(session: AsyncSession, user_id: int, data: UpdateU
     return UserResponse.model_validate(user)
 
 async def delete_user_service(session: AsyncSession, user_id: int, current_user: User) -> dict:
-    # ДОРАБОТКА: Проверка прав (только админ или сам пользователь)
+    # Проверка прав (только админ или сам пользователь)
     if current_user.role.name != 'admin' and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Недостаточно прав для удаления чужих данных")
 
@@ -104,19 +104,20 @@ async def delete_user_service(session: AsyncSession, user_id: int, current_user:
     await session.commit()
     return {"status": "ok"}
 
+
 # --- Существующие сервисы с ДОРАБОТКАМИ для проверки прав ---
 
 async def create_advert(
     session: AsyncSession,
     data: CreateAdvertRequest,
-    current_user: User # ДОРАБОТКА: Передаем текущего пользователя
+    current_user: User # Передаем текущего пользователя
 ) -> AdvertResponse:
     advert = AdModel(
         title=data.title,
         description=data.description,
         price=data.price,
         author=data.author,
-        author_id=current_user.id # ДОРАБОТКА: Привязываем объявление к создателю
+        author_id=current_user.id # Привязываем объявление к создателю
     )
     try:
         session.add(advert)
@@ -139,13 +140,13 @@ async def patch_advert(
     session: AsyncSession,
     ad_id: int,
     data: UpdateAdvertRequest,
-    current_user: User # ДОРАБОТКА: Передаем текущего пользователя для проверки прав
+    current_user: User # Передаем текущего пользователя для проверки прав
 ) -> AdvertResponse:
     advert = await session.get(AdModel, ad_id)
     if not advert:
         raise HTTPException(status_code=404, detail=f'Объявление {ad_id} не найдено.')
     
-    # ДОРАБОТКА: Проверка прав (админ или владелец объявления)
+    # Проверка прав (админ или владелец объявления)
     if current_user.role.name != 'admin' and advert.author_id != current_user.id:
         raise HTTPException(status_code=403, detail="Недостаточно прав для изменения чужого объявления")
     
@@ -162,7 +163,7 @@ async def delete_advert(session: AsyncSession, ad_id: int, current_user: User) -
     if not advert:
         raise HTTPException(status_code=404, detail=f'Объявление {ad_id} не найдено.')
     
-    # ДОРАБОТКА: Проверка прав (админ или владелец объявления)
+    # Проверка прав (админ или владелец объявления)
     if current_user.role.name != 'admin' and advert.author_id != current_user.id:
         raise HTTPException(status_code=403, detail="Недостаточно прав для удаления чужого объявления")
     

@@ -26,7 +26,7 @@ class UserResponse(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
-    # ДОРАБОТКА: Учим Pydantic извлекать имя роли из объекта Role
+    # Учим Pydantic извлекать имя роли из объекта Role
     @field_validator('role', mode='before')
     @classmethod
     def extract_role_name(cls, value):

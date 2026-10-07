@@ -41,7 +41,6 @@ desktop.ini
 .env
 .env.local
 .env.*.local
-.env.example
 *.env
 token*.env
 *.key

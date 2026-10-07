@@ -152,7 +152,7 @@ async def api_delete_user(
 ):
     return await delete_user_service(db, user_id, current_user)
 
-# РОУТЫ ОБЪЯВЛЕНИЙ (С ДОРАБОТКАМИ ПРАВ)
+# РОУТЫ ОБЪЯВЛЕНИЙ
 
 # Добавлена проверка require_auth для создания
 @app.post('/advertisement', response_model=CreateAdvertResponse)
@@ -169,7 +169,7 @@ async def api_create_advert(
             raise HTTPException(status_code=409, detail="Объявление с такими данными уже существует.")
         raise
 
-# ДОРАБОТКА: Получение доступно всем (зависимость не требуется)
+# Получение доступно всем 
 @app.get('/advertisement/{advert_id}', response_model=AdvertResponse)
 async def api_get_advert(
     advert_id: int,
@@ -177,7 +177,7 @@ async def api_get_advert(
 ):
     return await get_advert_by_id(db, advert_id)
 
-# ДОРАБОТКА: Добавлена проверка require_ownership_advert
+#  Добавлена проверка require_ownership_advert
 @app.patch('/advertisement/{advert_id}', response_model=AdvertResponse)
 async def api_patch_advert(
     advert_id: int,
@@ -187,7 +187,7 @@ async def api_patch_advert(
 ):
     return await patch_advert(db, advert_id, data, current_user)
 
-# ДОРАБОТКА: Добавлена проверка require_ownership_advert
+# Проверка require_ownership_advert
 @app.delete('/advertisement/{advert_id}')
 async def api_delete_advert(
     advert_id: int,
@@ -197,7 +197,7 @@ async def api_delete_advert(
     await delete_advert(db, advert_id, current_user)
     return {"status": "ok"}
 
-# ДОРАБОТКА: Поиск доступен всем 
+# Поиск доступен всем 
 @app.get('/advertisement', response_model=list[AdvertResponse])
 async def api_search_adverts(
     title: str | None = None,
