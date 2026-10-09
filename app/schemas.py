@@ -1,4 +1,4 @@
-#app/schemas.py
+# app/schemas.py
 from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import datetime
 from typing import Optional
@@ -14,10 +14,14 @@ class LoginResponse(BaseModel):
 class CreateUserRequest(BaseModel):
     username: str
     password: str
+    #### ИСПРАВЛЕНИЕ: Добавлено поле role для возможности создания пользователя с ролью admin ####
+    role: str = "user"
 
 class UpdateUserRequest(BaseModel):
     username: str | None = None
     password: str | None = None
+    #### ИСПРАВЛЕНИЕ: Добавлено поле role для возможности изменения роли (только админом) ####
+    role: str | None = None
 
 class UserResponse(BaseModel):
     id: int
@@ -26,13 +30,15 @@ class UserResponse(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
-    # Учим Pydantic извлекать имя роли из объекта Role
+    #### ИСПРАВЛЕНИЕ: Улучшен валидатор для большей надежности (обрабатывает объект Role) ####
     @field_validator('role', mode='before')
     @classmethod
     def extract_role_name(cls, value):
         if hasattr(value, 'name'):
             return value.name
-        return value
+        if isinstance(value, str):
+            return value
+        return str(value)
 
 class CreateAdvertRequest(BaseModel):
     title: str

@@ -52,7 +52,7 @@ async def get_optional_user(
     if not x_token:
         return None
     
-    # Проверяем, что токен существует и не просрочен (24 часа)
+    # Проверяем, что токен существует и не просрочен (48 часов)
     expire_threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=config.TOKEN_TTL)
     from sqlalchemy.sql import func
     db_expire_threshold = func.now() - datetime.timedelta(seconds=config.TOKEN_TTL)
@@ -100,7 +100,12 @@ async def require_ownership_advert(
     
     from .models import Advertisement as AdModel
     advert = await db.get(AdModel, advert_id)
-    if advert and advert.author_id == user.id:
+    
+    #### ИСПРАВЛЕНИЕ: Сначала проверяем наличие объявления, чтобы вернуть 404, а не 403 ####
+    if not advert:
+        raise HTTPException(status_code=404, detail="Объявление не найдено")
+        
+    if advert.author_id == user.id:
         return user
         
     raise HTTPException(status_code=403, detail="Недостаточно прав: можно изменять только свои объявления")
@@ -125,13 +130,24 @@ async def api_create_user(
 ):
     return await create_user_service(db, data)
 
-# Получение пользователя по ID (доступно неавторизованным)
-@app.get('/user/{user_id}', response_model=UserResponse)
+#### ИСПРАВЛЕНИЕ: Объединенный роут GET /user и GET /user/{user_id?} для поддержки необязательного параметра ####
+@app.get('/user')
+@app.get('/user/{user_id}')
 async def api_get_user(
-    user_id: int,
-    db: AsyncSession = Depends(get_db)
+    user_id: int | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user)
 ):
-    return await get_user_service(db, user_id)
+    if user_id is None:
+        # Если user_id не передан, возвращаем список пользователей (только для админов)
+        if not current_user or current_user.role.name != 'admin':
+            raise HTTPException(status_code=403, detail="Только администратор может получать список всех пользователей")
+        from .models import User as UserModel
+        result = await db.execute(select(UserModel))
+        return [UserResponse.model_validate(u) for u in result.scalars().all()]
+    else:
+        # Если user_id передан, возвращаем данные конкретного пользователя (доступно всем)
+        return await get_user_service(db, user_id)
 
 # Обновление пользователя (только авторизованный владелец или админ)
 @app.patch('/user/{user_id}', response_model=UserResponse)
@@ -198,6 +214,7 @@ async def api_delete_advert(
     return {"status": "ok"}
 
 # Поиск доступен всем 
+#### ИСПРАВЛЕНИЕ: Добавлены параметры пагинации offset и limit ####
 @app.get('/advertisement', response_model=list[AdvertResponse])
 async def api_search_adverts(
     title: str | None = None,
@@ -206,7 +223,9 @@ async def api_search_adverts(
     price_max: float | None = None,
     description: str | None = None,
     created_at: str | None = None,
+    offset: int = 0,
+    limit: int = 10,
     db: AsyncSession = Depends(get_db)
 ):
-    adverts = await search_adverts(db, title, author, price_min, price_max, description, created_at)
+    adverts = await search_adverts(db, title, author, price_min, price_max, description, created_at, offset, limit)
     return adverts

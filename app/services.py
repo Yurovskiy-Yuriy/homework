@@ -1,4 +1,4 @@
-#app/services.py
+# app/services.py
 from typing import Optional, List
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
@@ -44,11 +44,12 @@ async def create_user_service(session: AsyncSession, data: CreateUserRequest) ->
     if await session.scalar(stmt):
         raise HTTPException(status_code=409, detail="Пользователь с таким именем уже существует")
     
-    # Находим роль 'user' по умолчанию
-    role_stmt = select(Role).where(Role.name == 'user')
+    #### ИСПРАВЛЕНИЕ: Динамический поиск роли вместо жесткого кодирования 'user' ####
+    role_name_to_assign = data.role if data.role else "user"
+    role_stmt = select(Role).where(Role.name == role_name_to_assign)
     user_role = await session.scalar(role_stmt)
     if not user_role:
-        raise HTTPException(status_code=500, detail="Роль 'user' не найдена в БД")
+        raise HTTPException(status_code=400, detail=f"Роль '{role_name_to_assign}' не найдена в БД")
 
     new_user = User(
         username=data.username,
@@ -76,6 +77,20 @@ async def update_user_service(session: AsyncSession, user_id: int, data: UpdateU
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     
     update_data = data.model_dump(exclude_unset=True)
+    
+    #### ИСПРАВЛЕНИЕ: Обработка изменения роли (только для админа) ####
+    if 'role' in update_data:
+        if current_user.role.name != 'admin':
+            raise HTTPException(status_code=403, detail="Только администратор может изменять роль пользователя")
+        
+        role_stmt = select(Role).where(Role.name == update_data['role'])
+        new_role = await session.scalar(role_stmt)
+        if not new_role:
+            raise HTTPException(status_code=400, detail=f"Роль '{update_data['role']}' не найдена")
+        
+        user.role_id = new_role.id
+        del update_data['role'] # Удаляем из update_data, чтобы setattr не пытался установить несуществующее поле напрямую
+
     if 'password' in update_data:
         update_data['password_hash'] = hash_password(update_data.pop('password'))
     if 'username' in update_data:
@@ -110,14 +125,14 @@ async def delete_user_service(session: AsyncSession, user_id: int, current_user:
 async def create_advert(
     session: AsyncSession,
     data: CreateAdvertRequest,
-    current_user: User # Передаем текущего пользователя
+    current_user: User
 ) -> AdvertResponse:
     advert = AdModel(
         title=data.title,
         description=data.description,
         price=data.price,
         author=data.author,
-        author_id=current_user.id # Привязываем объявление к создателю
+        author_id=current_user.id
     )
     try:
         session.add(advert)
@@ -140,13 +155,12 @@ async def patch_advert(
     session: AsyncSession,
     ad_id: int,
     data: UpdateAdvertRequest,
-    current_user: User # Передаем текущего пользователя для проверки прав
+    current_user: User
 ) -> AdvertResponse:
     advert = await session.get(AdModel, ad_id)
     if not advert:
         raise HTTPException(status_code=404, detail=f'Объявление {ad_id} не найдено.')
     
-    # Проверка прав (админ или владелец объявления)
     if current_user.role.name != 'admin' and advert.author_id != current_user.id:
         raise HTTPException(status_code=403, detail="Недостаточно прав для изменения чужого объявления")
     
@@ -163,7 +177,6 @@ async def delete_advert(session: AsyncSession, ad_id: int, current_user: User) -
     if not advert:
         raise HTTPException(status_code=404, detail=f'Объявление {ad_id} не найдено.')
     
-    # Проверка прав (админ или владелец объявления)
     if current_user.role.name != 'admin' and advert.author_id != current_user.id:
         raise HTTPException(status_code=403, detail="Недостаточно прав для удаления чужого объявления")
     
@@ -177,7 +190,9 @@ async def search_adverts(
     query_price_min: Optional[float] = None,
     query_price_max: Optional[float] = None,
     query_description: Optional[str] = None,
-    query_created_at: Optional[str] = None
+    query_created_at: Optional[str] = None,
+    offset: int = 0, # ИСПРАВЛЕНИЕ: Добавлен параметр пагинации
+    limit: int = 10  # ИСПРАВЛЕНИЕ: Добавлен параметр пагинации
 ) -> List[AdvertResponse]:
     stmt = select(AdModel)
 
@@ -193,6 +208,9 @@ async def search_adverts(
         stmt = stmt.where(AdModel.description.ilike(f'%{query_description}%'))
     if query_created_at is not None:
         stmt = stmt.where(cast(AdModel.created_at, String).ilike(f'%{query_created_at}%'))
+
+    # ИСПРАВЛЕНИЕ: Применение пагинации к запросу
+    stmt = stmt.offset(offset).limit(limit)
 
     result = await session.execute(stmt)
     adverts = result.scalars().all()

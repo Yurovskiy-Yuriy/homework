@@ -1,4 +1,4 @@
-#add/models.py
+# app/models.py
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
 from datetime import datetime  
 from sqlalchemy.sql import func
@@ -31,7 +31,6 @@ class Token(Base):
         unique=True, 
         nullable=False
     )
-    # datetime (Python) для Mapped, DateTime (SQLAlchemy) для mapped_column
     creation_time: Mapped[datetime] = mapped_column(
         DateTime, 
         server_default=func.now(), 
@@ -49,11 +48,7 @@ class Advertisement(Base):
     price: Mapped[float] = mapped_column()
     author: Mapped[str] = mapped_column(String(100))
     
-    # Поле для связи с пользователем (для проверки прав "свой/чужой")
     author_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=True)
     author_obj: Mapped["User"] = relationship("User", back_populates="adverts", lazy="joined")
     
-    # datetime (Python) для Mapped, DateTime (SQLAlchemy) для mapped_column
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-    

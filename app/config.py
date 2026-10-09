@@ -14,7 +14,7 @@ class Config:
     
     DATABASE_URL = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
-    # Срок действия токена 24 часа (в секундах)
-    TOKEN_TTL = 60 * 60 * 24
+    #### ИСПРАВЛЕНИЕ: Изменен срок действия токена с 24 на 48 часов####
+    TOKEN_TTL = 60 * 60 * 48
 
 config = Config()
