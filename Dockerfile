@@ -1,21 +1,19 @@
-# Dockerfile
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim
 
-# Отключаем запись .pyc файлов и буферизацию вывода (лучше для Docker)
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Устанавливаем системные зависимости для OpenCV
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# 1. Делаем корневую папку проекта
-WORKDIR /code
+WORKDIR /app
 
-# Копируем зависимости и устанавливаем их
-COPY ./requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Копируем и устанавливаем зависимости
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 2. Копируем папку app ВНУТРЬ папки /code. 
-# Теперь структура внутри контейнера будет: /code/app/app.py
-COPY ./app /code/app
+# Копируем весь код проекта
+COPY . .
 
-# 3. Запускаем uvicorn. Теперь он корректно найдет пакет 'app' и модуль 'app' внутри него
-CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "80"]
+# Команда по умолчанию (переопределяется в docker-compose.yml)
+CMD ["python", "app.py"]

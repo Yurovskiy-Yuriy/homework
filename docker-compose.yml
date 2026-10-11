@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  flask:
+    build: .
+    command: python app.py
+    ports:
+      - "5000:5000"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app  # Монтируем код для горячей перезагрузки при разработке
+
+  celery_worker:
+    build: .
+    # ### ДОРАБОТКА: В Docker не нужен --pool=solo, так как Linux поддерживает prefork
+    command: celery -A tasks.celery_app worker --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - flask
+    volumes:
+      - .:/app
